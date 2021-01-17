@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {Image, ImageBackground, StyleSheet, Text, View} from 'react-native';
 import {Container, Content} from 'native-base';
 import {BleManager} from 'react-native-ble-plx';
@@ -24,22 +24,21 @@ import frontOffUnderOnImg from '../images/classCfOffUon.png';
 import frontOnUnderOffImg from '../images/classCfOnUoff.png';
 import allOnImg from '../images/classCfOnUon.png';
 
-class MainPage extends React.Component {
-  state = {
-    devices: [],
-    manager: new BleManager(),
-    image: allOffImg,
-    aIsOn: false,
-    bIsOn: false,
-    userSelectedSetup: false,
-  };
+function MainPage() {
+  const [devices, setDevices] = useState([]);
+  const [image, setImage] = useState(allOffImg);
+  const [aIsOn, setAIsOn] = useState(false);
+  const [bIsOn, setBIsOn] = useState(false);
+  const [userSelectedSetup, setUserSelectedSetup] = useState(false);
+
+  const manager = useState(new BleManager());
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  componentWillMount() {
+  useEffect(() => {
     console.log('DEBUG - MainPage.js before checkStateAndConnect() ');
-    checkStateAndConnect(this.state.manager)
+    checkStateAndConnect(manager)
       .then((device) => {
         console.log(
           'DEBUG - MainPage.js after checkStateAndConnect() ',
@@ -57,10 +56,8 @@ class MainPage extends React.Component {
             // ToDo: Need support for multiple BLE devices
             //
             unconfirmedDevices.forEach((dev) => {
-              scanAndConnect(this.state.manager, dev).then(() => {
-                let devices = this.state.devices;
-                devices.push(dev);
-                this.setState({devices});
+              scanAndConnect(manager, dev).then(() => {
+                setDevices((oldDevices) => [...oldDevices, dev]);
               });
             });
           })
@@ -72,7 +69,7 @@ class MainPage extends React.Component {
       .catch((err) => console.log('ERROR - ', err));
 
     /*
-    checkStateAndConnect( this.state.manager )
+    checkStateAndConnect( manager )
       .then( (device) => {
         // need to review let devices = this.state.devices
         console.log('DEBUG - MainPage.js after checkStateAndConnect() ', device)
@@ -81,95 +78,69 @@ class MainPage extends React.Component {
       })
       .catch( (err) => console.log('ERROR - ', err))
       */
-  }
+  }, [manager]);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  setSwitchOnA = () => {
-    let devLightChannelA = this.state.devices.filter(
-      (d) => d.grouping === 'lighting',
-    );
+  const setSwitchOnA = () => {
+    let devLightChannelA = devices.filter((d) => d.grouping === 'lighting');
 
-    sendOnToBluetooth(this.state.manager, devLightChannelA[0].id, 0);
-    let image = frontOnUnderOffImg;
-    let aIsOn = true;
-    if (this.state.bIsOn) {
-      image = allOnImg;
-    }
-    this.setState({image, aIsOn});
+    sendOnToBluetooth(manager, devLightChannelA[0].id, 0);
+    setImage(bIsOn ? allOnImg : frontOnUnderOffImg);
+    setAIsOn(true);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  setSwitchOffA = () => {
-    let devLightChannelA = this.state.devices.filter(
-      (d) => d.grouping === 'lighting',
-    );
+  const setSwitchOffA = () => {
+    let devLightChannelA = devices.filter((d) => d.grouping === 'lighting');
 
-    sendOffToBluetooth(this.state.manager, devLightChannelA[0].id, 0);
-    let image = allOffImg;
-    let aIsOn = false;
-    if (this.state.bIsOn) {
-      image = frontOffUnderOnImg;
-    }
-    this.setState({image, aIsOn});
+    sendOffToBluetooth(manager, devLightChannelA[0].id, 0);
+    setImage(bIsOn ? frontOffUnderOnImg : allOffImg);
+    setAIsOn(false);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  setSwitchOnB = () => {
-    let devLightChannelB = this.state.devices.filter(
-      (d) => d.grouping === 'lighting',
-    );
+  const setSwitchOnB = () => {
+    let devLightChannelB = devices.filter((d) => d.grouping === 'lighting');
 
-    sendOnToBluetooth(this.state.manager, devLightChannelB[0].id, 1);
-    let image = frontOffUnderOnImg;
-    let bIsOn = true;
-    if (this.state.aIsOn) {
-      image = allOnImg;
-    }
-    this.setState({image, bIsOn});
+    sendOnToBluetooth(manager, devLightChannelB[0].id, 1);
+    setImage(aIsOn ? allOnImg : frontOffUnderOnImg);
+    setBIsOn(true);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  setSwitchOffB = () => {
-    let devLightChannelB = this.state.devices.filter(
-      (d) => d.grouping === 'lighting',
-    );
+  const setSwitchOffB = () => {
+    let devLightChannelB = devices.filter((d) => d.grouping === 'lighting');
 
-    sendOffToBluetooth(this.state.manager, devLightChannelB[0].id, 1);
-    let image = allOffImg;
-    let bIsOn = false;
-    if (this.state.aIsOn) {
-      image = frontOnUnderOffImg;
-    }
-    this.setState({image, bIsOn});
+    sendOffToBluetooth(manager, devLightChannelB[0].id, 1);
+    setImage(aIsOn ? frontOnUnderOffImg : allOffImg);
+    setBIsOn(false);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  setUpDeviceAssignment = () => {
-    this.setState({userSelectedSetup: true});
+  const setUpDeviceAssignment = () => setUserSelectedSetup(true);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  const returnToMain = () => {
+    manager.stopDeviceScan();
+    setUserSelectedSetup(false);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  returnToMain = () => {
-    this.state.manager.stopDeviceScan();
-    this.setState({userSelectedSetup: false});
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  addToAssignedDevices = (dev) => {
+  const addToAssignedDevices = (dev) => {
     // remove addToAssignedDevices = (dev, functionName) => {
     //
     // assign the function to the device
@@ -181,36 +152,34 @@ class MainPage extends React.Component {
     // add the device to list of assigned devices
     //
     console.log('DEBUG - MainPage.js addToAssignedDevices() ', dev);
-    scanAndConnect(this.state.manager, dev)
+    scanAndConnect(manager, dev)
       .then(() => {
-        let devices = this.state.devices;
-        devices.push(dev);
+        let localDevices = devices;
+        localDevices.push(dev);
         console.log(
-          'DEBUG - MainPage.js addToAssignedDevices() succ devices',
-          devices[0],
+          'DEBUG - MainPage.js addToAssignedDevices() success devices',
+          localDevices[0],
         );
         //
         // clear all devices from storage before writing
         //
         removeBleDevicesFromStorage().then(() => {
-          writeBleDevicesFromStorage(devices);
+          writeBleDevicesFromStorage(localDevices);
           console.log(
             'DEBUG - MainPage.js after writeBleDevicesFromStorage() ',
           );
         });
-
-        this.setState({devices});
+        setDevices(localDevices);
       })
       .catch(() => {
         console.log('ERROR - failed to connect to dev ', dev);
       });
-    // remove this.setState({devices, functions})
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  remFromAssignedDevices = (dev) => {
+  const remFromAssignedDevices = (dev) => {
     // remove remFromAssignedDevices = (dev, functionName) => {
     //
     // remove the device from the function
@@ -221,72 +190,70 @@ class MainPage extends React.Component {
     //
     // remove the device from list of assigned devices
     //
-    disconnectFromBleDevice(this.state.manager, dev.id).catch((err) =>
+    disconnectFromBleDevice(manager, dev.id).catch((err) =>
       console.log('DEBUG - failed to disconnect ', err),
     );
 
-    let devices = this.state.devices.filter((d) => d.id !== dev.id);
+    let localDevices = devices.filter((d) => d.id !== dev.id);
     //
     // clear all devices from storage before writing
     //
     removeBleDevicesFromStorage().then(() => {
-      writeBleDevicesFromStorage(devices);
+      writeBleDevicesFromStorage(localDevices);
       console.log('DEBUG - MainPage.js after writeBleDevicesFromStorage() ');
     });
-    this.setState({devices});
+    setDevices(localDevices);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  render() {
-    console.log('DEBUG - MainPage.js render() devices', this.state.devices);
-    if (this.state.userSelectedSetup) {
-      return (
-        <SetupCard
-          manager={this.state.manager}
-          assignedDevices={this.state.devices}
-          addToAssignedDevices={this.addToAssignedDevices}
-          remFromAssignedDevices={this.remFromAssignedDevices}
-          returnToMain={this.returnToMain}
+  console.log('DEBUG - MainPage.js render() devices', devices);
+  if (userSelectedSetup) {
+    return (
+      <SetupCard
+        manager={manager}
+        assignedDevices={devices}
+        addToAssignedDevices={addToAssignedDevices}
+        remFromAssignedDevices={remFromAssignedDevices}
+        returnToMain={returnToMain}
+      />
+    );
+  } else {
+    return (
+      <Container>
+        <CompanyHeader
+          menuAvailable={true}
+          iconName={'menu'}
+          leftHeaderFunction={setUpDeviceAssignment}
         />
-      );
-    } else {
-      return (
-        <Container>
-          <CompanyHeader
-            menuAvailable={true}
-            iconName={'menu'}
-            leftHeaderFunction={this.setUpDeviceAssignment}
-          />
 
-          <Content
-            contentContainerStyle={{flexGrow: 1, backgroundColor: '#C3C3C3'}}>
-            <View style={styles.rowContainer}>
-              <View style={styles.colContainer}>
-                <ImageBackground style={styles.backGrdImage} source={allOffImg}>
-                  <Image style={styles.image} source={this.state.image} />
-                </ImageBackground>
-              </View>
+        <Content
+          contentContainerStyle={{flexGrow: 1, backgroundColor: '#C3C3C3'}}>
+          <View style={styles.rowContainer}>
+            <View style={styles.colContainer}>
+              <ImageBackground style={styles.backGrdImage} source={allOffImg}>
+                <Image style={styles.image} source={image} />
+              </ImageBackground>
             </View>
+          </View>
 
-            {this.state.devices.map((d, i) => {
-              if (d.grouping === 'lighting' && d.id !== '') {
-                return (
-                  <LightingControls
-                    key={`lightIndex${i}`}
-                    setSwitchOnA={this.setSwitchOnA}
-                    setSwitchOffA={this.setSwitchOffA}
-                    setSwitchOnB={this.setSwitchOnB}
-                    setSwitchOffB={this.setSwitchOffB}
-                  />
-                );
-              }
-            })}
-          </Content>
-        </Container>
-      );
-    }
+          {devices.map((d, i) => {
+            if (d.grouping === 'lighting' && d.id !== '') {
+              return (
+                <LightingControls
+                  key={`lightIndex${i}`}
+                  setSwitchOnA={setSwitchOnA}
+                  setSwitchOffA={setSwitchOffA}
+                  setSwitchOnB={setSwitchOnB}
+                  setSwitchOffB={setSwitchOffB}
+                />
+              );
+            }
+          })}
+        </Content>
+      </Container>
+    );
   }
 }
 
