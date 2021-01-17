@@ -1,0 +1,44 @@
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '10.0'
+
+target 'DSDblue' do
+  config = use_native_modules!
+
+  use_react_native!(:path => config["reactNativePath"])
+
+
+  target 'DSDblueTests' do
+    inherit! :complete
+    # Pods for testing
+
+    permissions_path = '../node_modules/react-native-permissions/ios'
+ 
+    pod 'Permission-BluetoothPeripheral', :path => "#{permissions_path}/BluetoothPeripheral"
+    pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+    pod 'Permission-MediaLibrary', :path => "#{permissions_path}/MediaLibrary"
+    pod 'Permission-PhotoLibrary', :path => "#{permissions_path}/PhotoLibrary"
+    pod 'Permission-PhotoLibraryAddOnly', :path => "#{permissions_path}/PhotoLibraryAddOnly"
+    pod 'Permission-Siri', :path => "#{permissions_path}/Siri"
+    pod 'Permission-SpeechRecognition', :path => "#{permissions_path}/SpeechRecognition"
+  end
+
+  # Enables Flipper.
+  #
+  # Note that if you have use_frameworks! enabled, Flipper will not work and
+  # you should disable these next few lines.
+  use_flipper!
+  post_install do |installer|
+    flipper_post_install(installer)
+  end
+end
+
+target 'DSDblue-tvOS' do
+  # Pods for DSDblue-tvOS
+
+  target 'DSDblue-tvOSTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+end
