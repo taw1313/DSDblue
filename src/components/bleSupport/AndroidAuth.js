@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, {useEffect} from 'react';
 import {
   ActivityIndicator,
   PermissionsAndroid,
@@ -10,16 +10,12 @@ import {Container, Content} from 'native-base';
 // import Permissions from 'react-native-permissions'
 import CompanyHeader from '../CompanyHeader';
 
-class AndroidAuth extends Component {
-  state = {
-    accessState: false,
-  };
-
+function AndroidAuth({changeState}) {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  async checkForPermission() {
-    try {
+  useEffect(() => {
+    const checkForPermission = async () => {
       const granted = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
         {
@@ -30,47 +26,31 @@ class AndroidAuth extends Component {
           buttonPositive: 'OK',
         },
       );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        this.setState({accessState: true});
-      } else {
-        this.setState({accessState: false});
-      }
-      this.props.changeState(this.state.accessState);
-    } catch (err) {
-      console.warn(err);
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  async componentDidMount() {
-    await this.checkForPermission();
-  }
+      changeState(granted === PermissionsAndroid.RESULTS.GRANTED);
+    };
+    checkForPermission();
+  }, [changeState]);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  render() {
-    return (
-      <Container>
-        <CompanyHeader menuAvailable={false} />
+  return (
+    <Container>
+      <CompanyHeader menuAvailable={false} />
 
-        <Content contentContainerStyle={{flexGrow: 1}}>
-          <View style={styles.introView}>
-            <Text style={styles.introTxt}>
-              {' '}
-              Checking Android for Bluetooth authorization...
-            </Text>
-            <Text style={styles.introTxt}> Please wait</Text>
-          </View>
+      <Content contentContainerStyle={styles.introCnt}>
+        <View style={styles.introView}>
+          <Text style={styles.introTxt}>
+            {' '}
+            Checking Android for Bluetooth authorization...
+          </Text>
+          <Text style={styles.introTxt}> Please wait</Text>
+        </View>
 
-          <ActivityIndicator size="large" color="#0000ff" />
-        </Content>
-      </Container>
-    );
-  }
+        <ActivityIndicator size="large" color="#0000ff" />
+      </Content>
+    </Container>
+  );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +62,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#C3C3C3',
+  },
+  introCnt: {
+    flexGrow: 1,
   },
   introView: {
     margin: 20,
