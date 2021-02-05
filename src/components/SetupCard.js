@@ -12,7 +12,11 @@ import {
 } from 'native-base';
 
 import CompanyHeader from './CompanyHeader';
-import {connectToBleDevice, scanForDevices} from '../device/Bluetooth';
+import {
+  connectToBleDevice,
+  scanForDevices,
+  stopScanForDevices,
+} from '../device/Bluetooth';
 
 const lightingFront = {
   grouping: 'lighting',
@@ -43,7 +47,7 @@ function SetupCard({
   remFromAssignedDevices,
   returnToMain,
 }) {
-  const [devices, setDevices] = useState([]);
+  const [dataObj, setDataObj] = useState({key: '', devices: []});
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
@@ -54,27 +58,26 @@ function SetupCard({
     //
     let likeAssignedDevices = assignedDevices.filter((d) => d.id === dev.id);
     if (!Array.isArray(likeAssignedDevices) || !likeAssignedDevices.length) {
-      let likeDevices = devices.filter((d) => d.id === dev.id);
+      let likeDevices = dataObj.devices.filter((d) => d.id === dev.id);
       if (!Array.isArray(likeDevices) || !likeDevices.length) {
         //
         // ToDo: Need to determine if I can pull SUUID, CUUID, and channels from the device data
         //       For now I am forcing this data
         //
-        console.log('add to DEVICES ', dev.localName);
-        setDevices([
-          ...devices,
-          {
-            id: dev.id,
-            localName: dev.localName,
-            SUUID: '',
-            CUUID: '',
-            grouping: '',
-            channels: [
-              {on: '', off: '', ctlFunction: ''},
-              {on: '', off: '', ctlFunction: ''},
-            ],
-          },
-        ]);
+        // due to the device object complexity one can not use a spread operator
+        // to set/change the state
+        //
+        let tmpDevices = dataObj.devices;
+        dev.SUUID = '';
+        dev.CUUID = '';
+        dev.grouping = '';
+        dev.channels = [
+          {on: '', off: '', ctlFunction: ''},
+          {on: '', off: '', ctlFunction: ''},
+        ];
+        tmpDevices.push(dev);
+        const newKey = Date.now();
+        setDataObj({key: newKey, devices: tmpDevices});
       }
     }
   };
@@ -83,15 +86,18 @@ function SetupCard({
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   useEffect(() => {
-    console.log('Start Scan for Devices!!!!!');
     scanForDevices(manager, addDevice);
+    return () => {
+      stopScanForDevices(manager);
+    };
   });
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const addBleDevice = (event, id) => {
-    let tmpDevices = devices;
+    console.log('called addBleDevice()');
+    let tmpDevices = dataObj.devices;
     let indexOfDev = tmpDevices.findIndex((d) => d.id === id);
     //
     // ToDo:  Add logic to assign functionality via a Model pop up or add to hamburger
@@ -108,18 +114,22 @@ function SetupCard({
     }
 
     let indexOfPropDevices = assignedDevices.findIndex((p) => p.id === id);
+    console.log('addBleDevice() ', indexOfPropDevices);
     //
     // only add if does not exist in list from main
     //
     if (indexOfPropDevices < 0) {
       addToAssignedDevices(tmpDevices[indexOfDev]);
-      tmpDevices = devices.filter((d) => d.id !== tmpDevices[indexOfDev].id);
-      setDevices(tmpDevices);
+      const newDevices = dataObj.devices.filter(
+        (d) => d.id !== tmpDevices[indexOfDev].id,
+      );
+      const newKey = Date.now();
+      setDataObj({key: newKey, devices: newDevices});
       // connectToBleDevice( d )
     } else {
       console.log(
         'ERROR - failed to added device ',
-        devices[indexOfDev].localName,
+        dataObj.devices[indexOfDev].localName,
       );
     }
   };
@@ -141,7 +151,7 @@ function SetupCard({
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const setBeforeReturnToMain = () => {
-    returnToMain(devices);
+    returnToMain(dataObj.devices);
   };
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +184,7 @@ function SetupCard({
           ))}
         </Card>
         <Card>
-          {devices.map((d, i) => (
+          {dataObj.devices.map((d, i) => (
             <CardItem key={`devIndex${i}`}>
               <Content contentContainerStyle={styles.contentContainer}>
                 <Text>{d.localName}</Text>

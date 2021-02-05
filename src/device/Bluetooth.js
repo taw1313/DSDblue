@@ -51,6 +51,7 @@ let self = (module.exports = {
   //
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   scanAndConnect: (manager, dev) => {
+    console.log('DEBUG - Bluetooth.js scanAndConnect() ', dev.id);
     return new Promise((resolve, reject) => {
       manager.startDeviceScan(null, null, (error, bleDev) => {
         if (error) {
@@ -85,12 +86,15 @@ let self = (module.exports = {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   connectToBleDevice: (bleDev) => {
     return new Promise((resolve, reject) => {
+      console.log('connectToBleDevice()', bleDev.connect);
       bleDev
         .connect()
         .then((d) => {
+          console.log('after Connect before discoverAll', d.localName);
           return d.discoverAllServicesAndCharacteristics();
         })
         .then((device) => {
+          console.log('after Connect before ', device.localName);
           if (device.name === null || device.name.length < 2) {
             device.name = device.id;
           }
@@ -122,6 +126,10 @@ let self = (module.exports = {
       }
       addDevice(bleDev);
     });
+  },
+
+  stopScanForDevices: (manager) => {
+    // manager.stopDeviceScan();
   },
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

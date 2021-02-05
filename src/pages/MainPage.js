@@ -8,6 +8,7 @@ import LightingControls from '../components/LightingControls';
 import SetupCard from '../components/SetupCard';
 import {
   checkStateAndConnect,
+  connectToBleDevice,
   scanAndConnect,
   sendOnToBluetooth,
   sendOffToBluetooth,
@@ -162,8 +163,9 @@ function MainPage({osType, accessBluetooth}) {
     //
     // add the device to list of assigned devices
     //
-    console.log('DEBUG - MainPage.js addToAssignedDevices() ', dev);
-    scanAndConnect(manager, dev)
+    console.log('DEBUG - MainPage.js addToAssignedDevices() ', dev.localName);
+    // scanAndConnect(manager, dev)
+    connectToBleDevice(dev)
       .then(() => {
         let localDevices = devices;
         localDevices.push(dev);
@@ -183,7 +185,7 @@ function MainPage({osType, accessBluetooth}) {
         setDevices(localDevices);
       })
       .catch(() => {
-        console.log('ERROR - failed to connect to dev ', dev);
+        // console.log('ERROR - failed to connect to dev ', dev);
       });
   };
 
