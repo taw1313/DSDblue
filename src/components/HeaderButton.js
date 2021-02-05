@@ -15,7 +15,7 @@ function HeaderButton({leftHeaderFunction}) {
 
 const styles = StyleSheet.create({
   buttonStyle: {
-    // backgroundColor: '#614031',
+    backgroundColor: '#614031',
   },
   iconStyle: {
     color: '#050505',
