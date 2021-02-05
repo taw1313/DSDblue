@@ -3,7 +3,12 @@ import {StyleSheet, Text, View} from 'react-native';
 
 import {SwitchOn, SwitchOff} from './Switch';
 
-function LightingControls() {
+function LightingControls({
+  setSwitchOnA,
+  setSwitchOffA,
+  setSwitchOnB,
+  setSwitchOffB,
+}) {
   return (
     <View style={styles.colContainer}>
       <View style={styles.rowContainer}>
@@ -14,11 +19,11 @@ function LightingControls() {
           <Text style={styles.introTxt}> Chassis</Text>
           <View style={styles.controls}>
             <View style={styles.btn}>
-              <SwitchOn onSwitchOn={this.props.setSwitchOnB} />
+              <SwitchOn onSwitchOn={setSwitchOnB} />
             </View>
 
             <View style={styles.btn}>
-              <SwitchOff onSwitchOff={this.props.setSwitchOffB} />
+              <SwitchOff onSwitchOff={setSwitchOffB} />
             </View>
           </View>
         </View>
@@ -27,11 +32,11 @@ function LightingControls() {
           <Text style={styles.introTxt}> Grill</Text>
           <View style={styles.controls}>
             <View style={styles.btn}>
-              <SwitchOn onSwitchOn={this.props.setSwitchOnA} />
+              <SwitchOn onSwitchOn={setSwitchOnA} />
             </View>
 
             <View style={styles.btn}>
-              <SwitchOff onSwitchOff={this.props.setSwitchOffA} />
+              <SwitchOff onSwitchOff={setSwitchOffA} />
             </View>
           </View>
         </View>

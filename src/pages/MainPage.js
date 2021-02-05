@@ -164,7 +164,7 @@ function MainPage({osType, accessBluetooth}) {
     // add the device to list of assigned devices
     //
     console.log('DEBUG - MainPage.js addToAssignedDevices() ', dev.localName);
-    // scanAndConnect(manager, dev)
+    // TAW was using this -> scanAndConnect(manager, dev)
     connectToBleDevice(dev)
       .then(() => {
         let localDevices = devices;
