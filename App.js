@@ -1,36 +1,27 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Platform} from 'react-native';
 
 import MainPage from './src/pages/MainPage';
 import AuthPage from './src/pages/AuthPage';
 
-export default class App extends React.Component {
-  state = {
-    authToAccessBle: false,
-    osType: Platform.OS,
-  };
+function App() {
+  const [accessBluetooth, setAccessBluetooth] = useState();
+  const osType = Platform.OS;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  changeAuthAccessState = (newState) => {
-    this.setState({authToAccessBle: newState});
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  render() {
-    console.log('DEBUG - App.js render()', this.state.authToAccessBle);
-    if (this.state.authToAccessBle) {
-      return <MainPage osType={this.state.osType} />;
-    } else {
-      return (
-        <AuthPage
-          osType={this.state.osType}
-          changeState={this.changeAuthAccessState}
-        />
-      );
-    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  console.log('DEBUG - App.js render()', accessBluetooth);
+  if (accessBluetooth !== undefined) {
+    return <MainPage osType={osType} accessBluetooth={accessBluetooth} />;
+  } else {
+    return (
+      <AuthPage
+        osType={osType}
+        changeState={(newState) => setAccessBluetooth(newState)}
+      />
+    );
   }
 }
+
+export default App;

@@ -1,123 +1,144 @@
-import React, {Component} from 'react';
-import {ActivityIndicator, Alert, StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import {Container, Content} from 'native-base';
-import Permissions from 'react-native-permissions';
+import {check, PERMISSIONS, request, RESULTS} from 'react-native-permissions';
 import CompanyHeader from '../CompanyHeader';
 
-class IOSAuth extends Component {
-  state = {
-    blePermission: '',
-  };
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+//┃ check(PERMISSIONS.IOS.CAMERA) ┃
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+//                │
+//    Is the feature available
+//        on this device ?
+//                │           ╔════╗
+//                ├───────────║ NO ║──────────────┐
+//                │           ╚════╝              │
+//             ╔═════╗                            ▼
+//             ║ YES ║                 ┌─────────────────────┐
+//             ╚═════╝                 │ RESULTS.UNAVAILABLE │
+//                │                    └─────────────────────┘
+//        Is the permission
+//          request-able ?
+//                │           ╔════╗
+//                ├───────────║ NO ║──────────────┐
+//                │           ╚════╝              │
+//             ╔═════╗                            ▼
+//             ║ YES ║                  ┌───────────────────┐
+//             ╚═════╝                  │ RESULTS.BLOCKED / │
+//                │                     │ RESULTS.LIMITED / │
+//                │                     │  RESULTS.GRANTED  │
+//                ▼                     └───────────────────┘
+//       ┌────────────────┐
+//       │ RESULTS.DENIED │
+//       └────────────────┘
+//                │
+//                ▼
+//┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+//┃ request(PERMISSIONS.IOS.CAMERA) ┃
+//┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+//                │
+//      Does the user accept
+//         the request ?
+//                │           ╔════╗
+//                ├───────────║ NO ║──────────────┐
+//                │           ╚════╝              │
+//             ╔═════╗                            ▼
+//             ║ YES ║                   ┌─────────────────┐
+//             ╚═════╝                   │ RESULTS.BLOCKED │
+//                │                      └─────────────────┘
+//                ▼
+//       ┌─────────────────┐
+//       │ RESULTS.GRANTED │
+//       └─────────────────┘
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  componentDidMount() {
-    console.log('DEBUG - IOSAuth componentDidMount()');
-    Permissions.check('bluetooth').then((res) => {
-      console.log(
-        'DEBUG - IOSAuth componentDidMount() after Permissions.check() ',
-        res,
-      );
-      if (res === 'authorized') {
-        this.props.changeState(true);
-      } else {
-        this.iosAlertForBlePermission(res);
+function IOSAuth({changeState}) {
+  const [available, setAvailable] = useState({});
+
+  useEffect(() => {
+    console.log('DEBUG - IOSAuth useEffect() check');
+    check(PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL).then((result) => {
+      console.log('DEBUG - IOSAuth after check() ', result);
+
+      switch (result) {
+        case RESULTS.UNAVAILABLE:
+          console.log(
+            'This feature is not available (on this device / in this context)',
+          );
+          changeState(false);
+          break;
+        case RESULTS.DENIED:
+          console.log(
+            'The permission has not been requested / is denied but requestable',
+          );
+          setAvailable(true);
+          break;
+        case RESULTS.LIMITED:
+          console.log('The permission is limited: some actions are possible');
+          changeState(true);
+          break;
+        case RESULTS.GRANTED:
+          console.log('The permission is granted');
+          changeState(true);
+          break;
+        case RESULTS.BLOCKED:
+          console.log('The permission is denied and not request-able anymore');
+          changeState(false);
+          break;
+        default:
+          changeState(false);
       }
     });
-  }
+  });
 
-  testFun = (txt) => {
-    console.log(`DEBUG - ${txt} - was selected`);
-  };
-
-  iosAlertForBlePermission = (blePermission) => {
-    console.log(
-      'DEBUG - IOSAuth iosAlertForBLEPermission() before Alert() ',
-      blePermission,
-    );
-    Alert.alert(
-      'May we access your bluetooth devices?',
-      'We need access so we may control external bluetooth devices',
-      [
-        {
-          text: 'No way',
-          onPress: () => {
-            this.iosRequestPermission('No way');
-          },
-        },
-        blePermission === 'undetermined'
-          ? {
-              text: 'OK',
-              onPress: () => {
-                this.iosRequestPermission('OK');
-              },
-            }
-          : {
-              text: 'Open Settings',
-              onPress: () => {
-                this.iosRequestPermission('Open Settings');
-              },
-            },
-      ],
-    );
-  };
-
-  iosRequestPermission = (txt) => {
-    console.log(
-      'DEBUG - IOSAuth iosRequestPermission() before Permissions() ',
-      txt,
-    );
-    if (txt === 'OK') {
-      console.log('DEBUG - OK - was selected');
-      //Permissions.request('bluetooth')
-      Permissions.check('bluetooth').then((res) => {
-        this.setState({blePermission: res});
-        console.log(
-          'DEBUG - IOSAuth iosRequestPermission Permissions.request() res = ',
-          res,
-        );
-        this.props.changeState(res);
+  useEffect(() => {
+    if (available) {
+      request(PERMISSIONS.IOS.BLUETOOTH_PERIPHERAL).then((result) => {
+        switch (result) {
+          case RESULTS.GRANTED:
+            changeState(true);
+            break;
+          case RESULTS.DENIED:
+          default:
+            changeState(false);
+            break;
+        }
       });
-    } else if (txt === 'Open Settings') {
-      console.log('DEBUG - Open Settings - was selected');
-      Permissions.openSettings().then((res) => {
-        this.setState({blePermission: res});
-        console.log('DEBUG - Permissions.openSettings() res = ', res);
-        this.props.changeState(res);
-      });
-    } else {
-      console.log('DEBUG - No Way - was selected');
     }
-  };
+  }, [available, changeState]);
 
-  render() {
-    return (
-      <Container>
-        <CompanyHeader menuAvailable={false} />
+  return (
+    <Container>
+      <CompanyHeader menuAvailable={false} />
 
-        <Content contentContainerStyle={{flexGrow: 1}}>
-          <View style={styles.introView}>
-            <Text style={styles.introTxt}>
-              {' '}
-              Checking IOS for Bluetooth authorization...
-            </Text>
-            <Text style={styles.introTxt}> Please wait</Text>
-          </View>
+      <Content contentContainerStyle={styles.introCnt}>
+        <View style={styles.introView}>
+          <Text style={styles.introTxt}>
+            {' '}
+            Checking IOS for Bluetooth authorization...
+          </Text>
+          <Text style={styles.introTxt}> Please wait</Text>
+        </View>
 
-          <ActivityIndicator size="large" color="#0000ff" />
-        </Content>
-      </Container>
-    );
-  }
+        <ActivityIndicator size="large" color="#0000ff" />
+      </Content>
+    </Container>
+  );
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#C3C3C3',
+  },
+  introCnt: {
+    flexGrow: 1,
   },
   introView: {
     margin: 20,

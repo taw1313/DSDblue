@@ -1,24 +1,26 @@
-import React from 'react'
-import {Button, Icon, Left} from 'native-base'
+import {Button, Left} from 'native-base';
+import React from 'react';
+import {StyleSheet} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const buttonStyle = {
-  backgroundColor: '#614031'
-}
-const iconStyle = {
-  color: '#050505'
-}
-
-class HeaderButton extends React.Component {
-  
-  render() {
-    return(
-        <Left>
-            <Button style={buttonStyle} onPress={this.props.leftHeaderFunction}>
-                <Icon style={iconStyle} name={this.props.iconName}/>
-            </Button>
-        </Left>
-    )
-  }
+function HeaderButton({leftHeaderFunction}) {
+  return (
+    <Left>
+      <Button style={styles.buttonStyle} onPress={leftHeaderFunction}>
+        <Icon style={styles.iconStyle} name="menu" />
+      </Button>
+    </Left>
+  );
 }
 
-export default HeaderButton
+const styles = StyleSheet.create({
+  buttonStyle: {
+    backgroundColor: '#614031',
+  },
+  iconStyle: {
+    color: '#050505',
+    fontSize: 20,
+  },
+});
+
+export default HeaderButton;
