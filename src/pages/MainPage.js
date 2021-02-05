@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ImageBackground, StyleSheet, Text, View} from 'react-native';
+import {Image, ImageBackground, StyleSheet, View} from 'react-native';
 import {Container, Content} from 'native-base';
 import {BleManager} from 'react-native-ble-plx';
 

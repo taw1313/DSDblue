@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Alert, StyleSheet, Text, View} from 'react-native';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import {Container, Content} from 'native-base';
 import {check, PERMISSIONS, request, RESULTS} from 'react-native-permissions';
 import CompanyHeader from '../CompanyHeader';
